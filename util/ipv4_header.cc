@@ -39,6 +39,10 @@ void IPv4Header::parse( Parser& parser )
     parser.set_error();
   }
 
+  if ( parser.has_error() ) {
+    return;
+  }
+
   parser.remove_prefix( static_cast<uint64_t>( hlen ) * 4 - IPv4Header::LENGTH );
 
   // Verify checksum
@@ -115,8 +119,10 @@ void IPv4Header::compute_checksum()
 std::string IPv4Header::to_string() const
 {
   stringstream ss {};
-  ss << hex << boolalpha << "IPv" << +ver << ", " << "len=" << +len << ", " << "protocol=" << +proto << ", "
-     << ( ttl >= 10 ? "" : "ttl=" + ::to_string( ttl ) + ", " ) << "src=" << inet_ntoa( { htobe32( src ) } ) << ", "
+  ss << hex << boolalpha << "IPv" << +ver << ", "
+     << "len=" << dec << +len << ", "
+     << "protocol=" << +proto << ", " << ( ttl >= 10 ? "" : "ttl=" + ::to_string( ttl ) + ", " )
+     << "src=" << inet_ntoa( { htobe32( src ) } ) << ", "
      << "dst=" << inet_ntoa( { htobe32( dst ) } );
   return ss.str();
 }

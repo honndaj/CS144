@@ -4,9 +4,7 @@
 #include "byte_stream.hh"
 
 using namespace std;
-ByteStream::ByteStream( uint64_t capacity )
-  : capacity_( capacity ), s_(), has_error_( false ), is_closed_( false ), byte_in_( 0 ), byte_out_( 0 )
-{}
+ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {}
 
 void Writer::push( string data )
 {
@@ -55,14 +53,14 @@ uint64_t Writer::bytes_pushed() const
 string_view Reader::peek() const
 {
   // Your code here.
-  string_view sv( s_ );
+  const string_view sv( s_ );
   return sv;
 }
 
 bool Reader::is_finished() const
 {
   // Your code here.
-  return s_.size() == 0 && is_closed_;
+  return s_.empty() && is_closed_;
 }
 
 bool Reader::has_error() const

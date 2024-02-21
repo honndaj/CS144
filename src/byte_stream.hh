@@ -12,11 +12,11 @@ class ByteStream
 {
 protected:
   uint64_t capacity_;
-  std::string s_;
-  bool has_error_;
-  bool is_closed_;
-  uint64_t byte_in_;
-  uint64_t byte_out_;
+  std::string s_ {};
+  bool has_error_ { false };
+  bool is_closed_ { false };
+  uint64_t byte_in_ { 0 };
+  uint64_t byte_out_ { 0 };
   // Please add any additional state to the ByteStream here, and not to the Writer and Reader interfaces.
 
 public:

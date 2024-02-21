@@ -10,14 +10,14 @@ using namespace std;
 void get_URL( const string& host, const string& path )
 {
   TCPSocket client_socket;
-  Address server_address(host, "http");
-  client_socket.connect(server_address);
-  client_socket.write("GET " + path + " HTTP/1.1\r\n" + "Host:" + host +"\r\n" + "Connection:close\r\n\r\n");
+  Address server_address( host, "http" );
+  client_socket.connect( server_address );
+  client_socket.write( "GET " + path + " HTTP/1.1\r\n" + "Host:" + host + "\r\n" + "Connection:close\r\n\r\n" );
   std::string buf {};
-  client_socket.read(buf);
-  while(!client_socket.eof()) {
-    std::cout<<buf;
-    client_socket.read(buf);
+  client_socket.read( buf );
+  while ( !client_socket.eof() ) {
+    std::cout << buf;
+    client_socket.read( buf );
   }
 }
 

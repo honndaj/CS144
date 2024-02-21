@@ -1,22 +1,24 @@
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 #include "byte_stream.hh"
 
 using namespace std;
-ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ), s_() ,has_error_(false), is_closed_(false), byte_in_(0), byte_out_(0) {}
+ByteStream::ByteStream( uint64_t capacity )
+  : capacity_( capacity ), s_(), has_error_( false ), is_closed_( false ), byte_in_( 0 ), byte_out_( 0 )
+{}
 
 void Writer::push( string data )
 {
   // Your code here.
-  if(is_closed()) {
-    return ;
+  if ( is_closed() ) {
+    return;
   }
   auto len = data.size();
-  if(len > capacity_ - s_.size()){
+  if ( len > capacity_ - s_.size() ) {
     len = capacity_ - s_.size();
   }
-  s_.append(data.substr(0, len));
+  s_.append( data.substr( 0, len ) );
   byte_in_ += len;
 }
 
@@ -53,7 +55,7 @@ uint64_t Writer::bytes_pushed() const
 string_view Reader::peek() const
 {
   // Your code here.
-  string_view sv(s_);
+  string_view sv( s_ );
   return sv;
 }
 
@@ -72,7 +74,7 @@ bool Reader::has_error() const
 void Reader::pop( uint64_t len )
 {
   // Your code here.
-  s_ = s_.substr(len);
+  s_ = s_.substr( len );
   byte_out_ += len;
 }
 

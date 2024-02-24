@@ -5,8 +5,8 @@ using namespace std;
 void Reassembler::insert( uint64_t first_index, string data, bool is_last_substring, Writer& output )
 {
   // Your code here.
-  if(output.available_capacity() + next_byte_ <= first_index) {
-    return ;
+  if(is_last_substring) {
+    is_receive_last_ = true;
   }
 
   if(first_index < next_byte_) {
@@ -18,11 +18,14 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     }
   }
   // 现在first_index大于等于next_byte
-  data = data.substr(0, output.available_capacity());
+  if(output.available_capacity() + next_byte_ <= first_index) {
+    return ;
+  }
+
   //改变buf_大小并插入data
-  uint64_t expect_len = max(buf_.size(), first_index + data.size() - next_byte_);
+  uint64_t expect_len = max(buf_.size(), min(first_index + data.size() - next_byte_, output.available_capacity()));
   buf_.resize(expect_len, std::make_pair(' ', false));
-  for(uint64_t i = 0; i < data.size(); i++ ) {
+  for(uint64_t i = 0; i < data.size() && i < buf_.size(); i++ ) {
     if(buf_[first_index - next_byte_ + i].second == 0) temp_bytes_++;
     buf_[first_index - next_byte_ + i] = std::make_pair(data[i], true);
   }
@@ -36,9 +39,6 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
       temp_bytes_--;
     }
     output.push(t);
-  }
-  if(is_last_substring) {
-    is_receive_last_ = true;
   }
   if(is_receive_last_ && buf_.empty()) {
     output.close();

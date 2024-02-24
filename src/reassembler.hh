@@ -2,18 +2,18 @@
 
 #include "byte_stream.hh"
 
-#include <string>
-#include <queue>
-#include <utility>
 #include <iostream>
+#include <queue>
+#include <string>
+#include <utility>
 
 class Reassembler
 {
 protected:
-  std::deque<std::pair<char, bool> > buf_{};
-  uint64_t temp_bytes_ {0};
-  uint64_t next_byte_ {0};
-  bool is_receive_last_ {false};
+  std::deque<std::pair<char, bool>> buf_ {};
+  uint64_t temp_bytes_ { 0 };
+  uint64_t next_byte_ { 0 };
+  bool is_receive_last_ { false };
 
 public:
   /*

@@ -3,13 +3,14 @@
 #include "byte_stream.hh"
 
 #include <string>
-#include <map>
+#include <queue>
+#include <utility>
 #include <iostream>
 
 class Reassembler
 {
 protected:
-  std::map<int, std::string> buf_{};
+  std::deque<std::pair<char, bool> > buf_{};
   uint64_t temp_bytes_ {0};
   uint64_t next_byte_ {0};
   bool is_receive_last_ {false};

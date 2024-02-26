@@ -13,6 +13,7 @@ protected:
   std::deque<std::pair<char, bool>> buf_ {};
   uint64_t temp_bytes_ { 0 };
   uint64_t next_byte_ { 0 };
+  uint64_t output_cap_ { 0 };
   bool is_receive_last_ { false };
 
 public:

@@ -13,12 +13,12 @@ void Writer::push( string data )
     return;
   }
   auto len = min( data.size(), available_capacity() );
-  if(len < data.size() ) {
-    data = data.substr(0, len);
+  if ( len < data.size() ) {
+    data = data.substr( 0, len );
   }
-  string_deque_.push_back( std::move(data) );
-  if( string_deque_.size() == 1 ) {
-    view_front_ = string_view(string_deque_.front());
+  string_deque_.push_back( std::move( data ) );
+  if ( string_deque_.size() == 1 ) {
+    view_front_ = string_view( string_deque_.front() );
   }
   byte_in_ += len;
   byte_bufferd_ += len;
@@ -57,7 +57,7 @@ uint64_t Writer::bytes_pushed() const
 string_view Reader::peek() const
 {
   // Your code here.
-  if(string_deque_.empty()) {
+  if ( string_deque_.empty() ) {
     return {};
   }
   return view_front_;
@@ -78,21 +78,21 @@ bool Reader::has_error() const
 void Reader::pop( uint64_t len )
 {
   // Your code here.
-  len = min(len, byte_bufferd_);
+  len = min( len, byte_bufferd_ );
 
-  while(len > 0 && !string_deque_.empty()) {
-  uint64_t front_size = view_front_.size();
-    if (front_size > len) {
-      view_front_.remove_prefix(len);
+  while ( len > 0 && !string_deque_.empty() ) {
+    uint64_t front_size = view_front_.size();
+    if ( front_size > len ) {
+      view_front_.remove_prefix( len );
       byte_out_ += len;
       byte_bufferd_ -= len;
-      return ; 
+      return;
     }
     len -= front_size;
-    byte_out_ += front_size; 
+    byte_out_ += front_size;
     byte_bufferd_ -= front_size;
     string_deque_.pop_front();
-    view_front_ = string_view(string_deque_.front());
+    view_front_ = string_view( string_deque_.front() );
   }
 }
 

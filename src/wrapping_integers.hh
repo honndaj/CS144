@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 
 /*
  * The Wrap32 type represents a 32-bit unsigned integer that:

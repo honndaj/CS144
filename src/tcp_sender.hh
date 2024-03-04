@@ -10,19 +10,23 @@ class TCPSender
   Wrap32 isn_;
   uint64_t next_seqno_need_to_send_ { 0 }; // 下一个要发送的seqno（封装完未发送）。包括SYN和FIN
   uint64_t next_seqno_need_to_wrap_ { 0 }; //下一个要封装到message里的seqno, 比next_seqno_need_to_send_大
-  uint64_t ackno_ { 0 }; //收到的最大ackno
+  uint64_t ackno_ { 0 };                   //收到的最大ackno
   uint64_t initial_RTO_ms_;
   uint64_t now_RTO_ms_;
   uint64_t remain_ms_;
+  bool is_sending_one_seq_ { false };
+  uint64_t on_seqno_ { 0 };
   uint64_t num_consecutive_retransmissions_ { 0 };
-  uint16_t rwnd_ { 1 }; // SYN和FIN占用窗口
-  uint64_t seq_in_flight_ { 0 };// 发出去的序号数量
+  uint16_t rwnd_ { 1 };          // SYN和FIN占用窗口 注意这里一开始是1
+  uint64_t seq_in_flight_ { 0 }; // 发出去的序号数量
   bool already_send_SYN_ { false };
   bool already_send_FIN_ { false };
   bool is_retransmission_ { false };
 
   std::map<uint64_t, TCPSenderMessage> track_segment_ {};
 
+  void make_msg( std::string& payload, bool is_SYN, bool is_FIN );
+  void read_payload( size_t payload_len, Reader& outbound_stream, std::string& payload );
 
 public:
   /* Construct TCP sender with given default Retransmission Timeout and possible ISN */

@@ -26,15 +26,16 @@ uint64_t TCPSender::consecutive_retransmissions() const
   return num_consecutive_retransmissions_;
 }
 
-optional<TCPSenderMessage> TCPSender::maybe_send()
+optional<TCPSenderMessage> TCPSender::maybe_send() // 发送重传的段或者新的段或者不发
 {
   // Your code here.
   TCPSenderMessage ret;
   if ( is_retransmission_ ) {
     is_retransmission_ = false;
-    if ( track_segment_.empty() ) {// 为什么会空呢，是因为重传前接收到了需要重传的段吗（send.extra.cc:485）
-      return nullopt;
-    }
+    // if ( track_segment_.empty() ) {// 
+    //   return nullopt;
+    // }
+    assert(!track_segment_.empty());
     ret = track_segment_.begin()->second;
   } else {
     if ( track_segment_.find( next_seqno_need_to_send_ ) == track_segment_.end() ) {
@@ -79,17 +80,17 @@ void TCPSender::push( Reader& outbound_stream )
   }
 
   if ( !rwnd_ ) {
-    if ( !is_sending_one_seq_ ) {
+    if ( !is_sending_one_seq_ ) { // 如果没发送一字节的测试msg，就发送；如果发送过了就啥也不干
       string payload = {};
       read_payload( 1, outbound_stream, payload );
       if ( payload.empty() ) {
         if ( outbound_stream.is_finished() ) {
           make_msg( payload, false, true );
         }
-      } else { // 这里到底需不需要发fin呢
+      } else {
         make_msg( payload, false, false );
       }
-      on_seqno_ = next_seqno_need_to_wrap_;
+      one_seqno_ = next_seqno_need_to_wrap_;
       is_sending_one_seq_ = true;
     }
   } else {
@@ -130,13 +131,15 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
   // Your code here.
   uint64_t ab_ackno = 0;
   rwnd_ = msg.window_size;
-  if ( msg.ackno.has_value() ) {
-    ab_ackno = msg.ackno.value().unwrap( isn_, next_seqno_need_to_send_ );
-  } else {
-    return;
+
+  if ( !msg.ackno.has_value() ) {
+    return ;
   }
+
+  ab_ackno = msg.ackno.value().unwrap( isn_, next_seqno_need_to_send_ );
+
   if ( is_sending_one_seq_ ) {
-    if ( ab_ackno == on_seqno_ ) {
+    if ( ab_ackno == one_seqno_ ) {
       is_sending_one_seq_ = false;
     }
   }
@@ -163,7 +166,9 @@ void TCPSender::tick( const size_t ms_since_last_tick ) // 很搞啊，重传的maybe_s
 {
   // Your code here.
   if ( ms_since_last_tick >= remain_ms_ ) {
-    is_retransmission_ = true;
+    if(!track_segment_.empty()) {
+      is_retransmission_ = true;
+    }
     if ( rwnd_ ) { // 窗口非零别忘了，我没注意到，pdf里直接告诉了
       num_consecutive_retransmissions_++;
       now_RTO_ms_ *= 2;

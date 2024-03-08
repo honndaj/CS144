@@ -14,8 +14,8 @@ class TCPSender
   uint64_t initial_RTO_ms_;
   uint64_t now_RTO_ms_;
   uint64_t remain_ms_;
-  bool is_sending_one_seq_ { false };
-  uint64_t on_seqno_ { 0 };
+  bool is_sending_one_seq_ { false }; // 是否正在发送一字节的测试msg，防止连续发送不同的测试msg
+  uint64_t one_seqno_ { 0 }; // 和is_sending_one_sqe_配套使用，记录一个字节的序列号，用来确定是否收到测试字节（因为也有可能收到之前发送的数据包）
   uint64_t num_consecutive_retransmissions_ { 0 };
   uint16_t rwnd_ { 1 };          // SYN和FIN占用窗口 注意这里一开始是1
   uint64_t seq_in_flight_ { 0 }; // 发出去的序号数量

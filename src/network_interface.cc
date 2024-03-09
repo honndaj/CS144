@@ -23,23 +23,25 @@ NetworkInterface::NetworkInterface( const EthernetAddress& ethernet_address, con
 void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Address& next_hop )
 {
   uint32_t raw_ip_address = next_hop.ipv4_numeric();
-  auto entry = arp_cache.find( raw_ip_address );
-  if ( entry != arp_cache.end() && entry->second.second < 30000 ) { //有缓存且未超时
-    frame_queue.push( std::move( EthernetFrame(
+  auto entry = arp_cache_.find( raw_ip_address );
+  if ( entry != arp_cache_.end() && entry->second.second < 30000 ) { // 有缓存且未超时
+    frame_queue_.push( std::move( EthernetFrame(
       EthernetHeader( entry->second.first, ethernet_address_, EthernetHeader::TYPE_IPv4 ), serialize( dgram ) ) ) );
-  } else { 
+  } else {
 
-    if(timer_4_arp_request_.find(raw_ip_address) == timer_4_arp_request_.end() || timer_4_arp_request_[raw_ip_address] >= 5000) {
+    if ( timer_4_arp_request_.find( raw_ip_address ) == timer_4_arp_request_.end()
+         || timer_4_arp_request_[raw_ip_address] >= 5000 ) {
       timer_4_arp_request_[raw_ip_address] = 0;
       ARPMessage arp_msg = {};
       arp_msg.sender_ethernet_address = ethernet_address_;
       arp_msg.sender_ip_address = ip_address_.ipv4_numeric();
       arp_msg.target_ip_address = raw_ip_address;
       arp_msg.opcode = 1; // 1代表request
-      frame_queue.push( std::move( EthernetFrame(
-        EthernetHeader( ETHERNET_BROADCAST, ethernet_address_, EthernetHeader::TYPE_ARP ), serialize( arp_msg ) ) ) );
+      frame_queue_.push(
+        std::move( EthernetFrame( EthernetHeader( ETHERNET_BROADCAST, ethernet_address_, EthernetHeader::TYPE_ARP ),
+                                  serialize( arp_msg ) ) ) );
     }
-    dgram_queue[raw_ip_address].push_back( dgram );
+    dgram_queue_[raw_ip_address].push_back( dgram );
   }
 }
 
@@ -60,9 +62,9 @@ optional<InternetDatagram> NetworkInterface::recv_frame( const EthernetFrame& fr
   } else if ( frame.header.type == EthernetHeader::TYPE_ARP ) {
     ARPMessage arp_recv_msg = {};
     if ( parse( arp_recv_msg, frame.payload ) ) {
-      arp_cache[arp_recv_msg.sender_ip_address] = make_pair( arp_recv_msg.sender_ethernet_address, 0 );
+      arp_cache_[arp_recv_msg.sender_ip_address] = make_pair( arp_recv_msg.sender_ethernet_address, 0 );
       if ( arp_recv_msg.opcode == 1 ) { // 如果收到的是 ARP request
-        if(arp_recv_msg.target_ip_address != ip_address_.ipv4_numeric()) {
+        if ( arp_recv_msg.target_ip_address != ip_address_.ipv4_numeric() ) {
           return nullopt;
         }
         ARPMessage arp_send_msg = {};
@@ -71,19 +73,19 @@ optional<InternetDatagram> NetworkInterface::recv_frame( const EthernetFrame& fr
         arp_send_msg.target_ethernet_address = arp_recv_msg.sender_ethernet_address;
         arp_send_msg.target_ip_address = arp_recv_msg.sender_ip_address;
         arp_send_msg.opcode = 2;
-        frame_queue.push( std::move( EthernetFrame(
+        frame_queue_.push( std::move( EthernetFrame(
           EthernetHeader( arp_send_msg.target_ethernet_address, ethernet_address_, EthernetHeader::TYPE_ARP ),
           serialize( arp_send_msg ) ) ) );
       } else if ( arp_recv_msg.opcode == 2 ) { // 如果收到的是 ARP reply，就可以发送dgram_queue中暂存的dgram
-        auto it = dgram_queue.find( arp_recv_msg.sender_ip_address );
-        if ( it != dgram_queue.end() ) {
+        auto it = dgram_queue_.find( arp_recv_msg.sender_ip_address );
+        if ( it != dgram_queue_.end() ) {
           vector<IPv4Datagram>& dgram_vec = it->second;
           for ( size_t i = 0; i < dgram_vec.size(); i++ ) {
-            frame_queue.push( std::move( EthernetFrame(
+            frame_queue_.push( std::move( EthernetFrame(
               EthernetHeader( arp_recv_msg.sender_ethernet_address, ethernet_address_, EthernetHeader::TYPE_IPv4 ),
               serialize( dgram_vec[i] ) ) ) );
           }
-          dgram_queue.erase( it );
+          dgram_queue_.erase( it );
         }
       }
     }
@@ -94,18 +96,18 @@ optional<InternetDatagram> NetworkInterface::recv_frame( const EthernetFrame& fr
 // ms_since_last_tick: the number of milliseconds since the last call to this method
 void NetworkInterface::tick( const size_t ms_since_last_tick )
 {
-  for ( auto it = arp_cache.begin(); it != arp_cache.end(); ) {
-    auto key = it->second;
+  for ( auto it = arp_cache_.begin(); it != arp_cache_.end(); ) {
+    auto& key = it->second;
     key.second += ms_since_last_tick;
     if ( key.second >= 30000 ) {
-      it = arp_cache.erase( it );
+      it = arp_cache_.erase( it );
     } else {
       it++;
     }
   }
-  
-  for(auto it = timer_4_arp_request_.begin(); it != timer_4_arp_request_.end(); ) {
-    auto key = it->second;
+
+  for ( auto it = timer_4_arp_request_.begin(); it != timer_4_arp_request_.end(); ) {
+    auto& key = it->second;
     key += ms_since_last_tick;
     it++;
   }
@@ -113,11 +115,11 @@ void NetworkInterface::tick( const size_t ms_since_last_tick )
 
 optional<EthernetFrame> NetworkInterface::maybe_send()
 {
-  if ( frame_queue.empty() ) {
+  if ( frame_queue_.empty() ) {
     return nullopt;
   }
 
-  auto ret = frame_queue.front();
-  frame_queue.pop();
+  auto ret = frame_queue_.front();
+  frame_queue_.pop();
   return ret;
 }

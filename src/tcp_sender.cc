@@ -32,10 +32,10 @@ optional<TCPSenderMessage> TCPSender::maybe_send() // 发送重传的段或者新的段或者
   TCPSenderMessage ret;
   if ( is_retransmission_ ) {
     is_retransmission_ = false;
-    // if ( track_segment_.empty() ) {// 
+    // if ( track_segment_.empty() ) {//
     //   return nullopt;
     // }
-    assert(!track_segment_.empty());
+    assert( !track_segment_.empty() );
     ret = track_segment_.begin()->second;
   } else {
     if ( track_segment_.find( next_seqno_need_to_send_ ) == track_segment_.end() ) {
@@ -62,7 +62,7 @@ void TCPSender::make_msg( std::string& payload, bool is_SYN, bool is_FIN )
   auto msg = TCPSenderMessage( Wrap32::wrap( next_seqno_need_to_wrap_, isn_ ), is_SYN, payload, is_FIN );
   uint64_t msg_len = msg.sequence_length();
   track_segment_[next_seqno_need_to_wrap_] = std::move( msg );
-  seq_in_flight_ += msg_len; //注意这个时候就加了seq_in_flight而不是真正发送后才加
+  seq_in_flight_ += msg_len; // 注意这个时候就加了seq_in_flight而不是真正发送后才加
   next_seqno_need_to_wrap_ += msg_len;
   if ( is_SYN ) {
     already_send_SYN_ = true;
@@ -133,7 +133,7 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
   rwnd_ = msg.window_size;
 
   if ( !msg.ackno.has_value() ) {
-    return ;
+    return;
   }
 
   ab_ackno = msg.ackno.value().unwrap( isn_, next_seqno_need_to_send_ );
@@ -166,7 +166,7 @@ void TCPSender::tick( const size_t ms_since_last_tick ) // 很搞啊，重传的maybe_s
 {
   // Your code here.
   if ( ms_since_last_tick >= remain_ms_ ) {
-    if(!track_segment_.empty()) {
+    if ( !track_segment_.empty() ) {
       is_retransmission_ = true;
     }
     if ( rwnd_ ) { // 窗口非零别忘了，我没注意到，pdf里直接告诉了

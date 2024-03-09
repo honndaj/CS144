@@ -115,10 +115,8 @@ void IPv4Header::compute_checksum()
 std::string IPv4Header::to_string() const
 {
   stringstream ss {};
-  ss << hex << boolalpha << "IPv" << +ver << ", "
-     << "len=" << +len << ", "
-     << "protocol=" << +proto << ", " << ( ttl >= 10 ? "" : "ttl=" + ::to_string( ttl ) + ", " )
-     << "src=" << inet_ntoa( { htobe32( src ) } ) << ", "
+  ss << hex << boolalpha << "IPv" << +ver << ", " << "len=" << +len << ", " << "protocol=" << +proto << ", "
+     << ( ttl >= 10 ? "" : "ttl=" + ::to_string( ttl ) + ", " ) << "src=" << inet_ntoa( { htobe32( src ) } ) << ", "
      << "dst=" << inet_ntoa( { htobe32( dst ) } );
   return ss.str();
 }
